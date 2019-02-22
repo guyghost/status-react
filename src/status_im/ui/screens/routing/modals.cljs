@@ -15,6 +15,7 @@
    :chat-modal
    :show-extension-modal
    :stickers-pack-modal
+   :tribute-learn-more
    :wallet-sign-message-modal
    :selection-modal-screen
    :wallet-settings-assets

@@ -10,6 +10,7 @@
             [status-im.utils.core :as utils]
             [status-im.i18n :as i18n]
             [status-im.utils.datetime :as time]
+            [status-im.tribute-to-talk.core :as tribute-to-talk]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.icons.vector-icons :as vector-icons]
             [status-im.ui.components.chat-icon.screen :as chat-icon.screen]
@@ -95,6 +96,7 @@
            name color online
            group-chat public?
            public-key
+           tribute
            timestamp
            last-message-content
            last-message-content-type]}]
@@ -111,6 +113,13 @@
        [react/view styles/item-lower-container
         [message-content-text {:content      last-message-content
                                :content-type last-message-content-type}]
+        #_(let [tribute-status (tribute-to-talk/status-label tribute)]
+            (if (and tribute-status
+                     (not= :paid (:status tribute)))
+              [react/text {:style               styles/last-message-text}
+               tribute-status]
+              [message-content-text {:content      last-message-content
+                                     :content-type last-message-content-type}]))
         [unviewed-indicator chat-id]]]]]))
 
 (defn home-list-item [[home-item-id home-item]]
