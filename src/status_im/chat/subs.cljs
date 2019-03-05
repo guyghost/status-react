@@ -90,11 +90,10 @@
 (re-frame/reg-sub
  :chats/active-chats
  :<- [:contacts/contacts]
- :<- [:tribute-to-talk/tributes]
  :<- [::chats]
  :<- [:account/account]
- (fn [[contacts tributes chats account]]
-   (chat.db/active-chats contacts tributes chats account)))
+ (fn [[contacts chats account]]
+   (chat.db/active-chats contacts chats account)))
 
 (re-frame/reg-sub
  :chats/current-chat

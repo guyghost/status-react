@@ -10,34 +10,36 @@
 
 ;;Contact
 
+(spec/def :contact/address (spec/nilable :global/address))
+(spec/def :contact/blocked? boolean?)
+(spec/def :contact/description (spec/nilable string?))
+(spec/def :contact/fcm-token (spec/nilable string?))
+(spec/def :contact/hide-contact? boolean?)
+(spec/def :contact/last-online (spec/nilable int?))
+(spec/def :contact/last-updated (spec/nilable int?))
+(spec/def :contact/name :global/not-empty-string)
+(spec/def :contact/pending? boolean?)
+(spec/def :contact/photo-path (spec/nilable string?))
 ;;we can't validate public key, because for dapps public-key is just string
 (spec/def :contact/public-key :global/not-empty-string)
-(spec/def :contact/name :global/not-empty-string)
-(spec/def :contact/address (spec/nilable :global/address))
-(spec/def :contact/photo-path (spec/nilable string?))
 (spec/def :contact/status (spec/nilable string?))
-(spec/def :contact/fcm-token (spec/nilable string?))
-(spec/def :contact/description (spec/nilable string?))
-(spec/def :contact/last-updated (spec/nilable int?))
-(spec/def :contact/last-online (spec/nilable int?))
-(spec/def :contact/pending? boolean?)
-(spec/def :contact/hide-contact? boolean?)
 (spec/def :contact/tags (spec/coll-of string? :kind set?))
-(spec/def :contact/blocked? boolean?)
+(spec/def :contact/tribute (spec/nilable map?))
 
 (spec/def :contact/contact (spec/keys  :req-un [:contact/name]
-                                       :opt-un [:contact/public-key
-                                                :contact/address
-                                                :contact/photo-path
-                                                :contact/status
-                                                :contact/last-updated
-                                                :contact/last-online
-                                                :contact/pending?
-                                                :contact/hide-contact?
-                                                :contact/fcm-token
-                                                :contact/description
+                                       :opt-un [:contact/address
                                                 :contact/blocked?
-                                                :contact/tags]))
+                                                :contact/description
+                                                :contact/fcm-token
+                                                :contact/hide-contact?
+                                                :contact/last-online
+                                                :contact/last-updated
+                                                :contact/pending?
+                                                :contact/photo-path
+                                                :contact/public-key
+                                                :contact/status
+                                                :contact/tags
+                                                :contact/tribute]))
 
 ;;Contact list ui props
 (spec/def :contact-list-ui/edit? boolean?)

@@ -915,6 +915,8 @@
     "tribute-to-talk-removing-note": "Removing Tribute to Talk will allow new people to start a chat without sending SNT. Requires a transaction to be made.",
     "tribute-to-talk-enabled": "You have Tribute to Talk enabled.",
     "tribute-to-talk-add-friends": "Add friends as a contact to allow chats without tribute payment.",
+    "learn-more": "Learn more",
+    "loading": "Loading...",
     "tribute-to-talk-learn-more-1": "Your time and attention are your most valuable assets. Tribute to Talk lets you set an amount of SNT required for new people to start a chat with you.",
     "tribute-to-talk-learn-more-2": "Anyone who is not in your contact list will be asked to pay, and you can respond once they have.",
     "tribute-to-talk-learn-more-3": "You can always send the money back, but to ensure that friends can reach you freely, add them as a contact first.",

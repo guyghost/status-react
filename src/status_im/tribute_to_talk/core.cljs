@@ -132,10 +132,15 @@
               (accounts.update/update-settings
                (assoc account-settings :tribute-to-talk {:seen? true}) {}))))
 
-(defn check-tribute [web3 network identity]
-  (let [contract (get ethereum.tribute/contracts (ethereum.core/network->chain-keyword network))]
-    (ethereum.tribute/get-tribute web3 contract identity
-                                  #(re-frame/dispatch [:tribute-to-talk.ui/set-tribute identity %1]))))
+(fx/defn check-tribute [{:keys [db] :as cofx} identity]
+  (when (and (not (get-in db [:chats identity :group-chat]))
+             (not (#{:paid :none}
+                   (get-in db [:contacts/contacts identity :tribute :status]))))
+    (let [network (get-in db [:account/account :networks (:network db)])
+          contract (get ethereum.tribute/contracts (ethereum.core/network->chain-keyword network))
+          cb #(re-frame/dispatch [:tribute-to-talk.ui/set-tribute identity %1])]
+      (ethereum.tribute/get-tribute (:web3 db) contract identity cb)))
+  {:db db})
 
 (defn status-label [[status value]]
   (cond (= status :paid)

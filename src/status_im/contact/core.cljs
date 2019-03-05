@@ -73,7 +73,10 @@
 (fx/defn add-contact
   "Add a contact and set pending to false"
   [{:keys [db] :as cofx} public-key]
-  (when (not= (get-in db [:account/account :public-key]) public-key)
+  (when  (and
+          (not (get-in db [:chats public-key :group-chat]))
+          (not ((:contacts/contacts db) public-key))
+          (not= (get-in db [:account/account :public-key]) public-key))
     (let [contact (-> (build-contact cofx public-key)
                       (assoc :pending? false
                              :hide-contact? false))]
@@ -81,6 +84,12 @@
                 {:db (assoc-in db [:contacts/new-identity] "")}
                 (upsert-contact contact)
                 (send-contact-request contact)))))
+
+(fx/defn maybe-add-contact
+  [{:keys [db] :as cofx} chat-id]
+  (when  (and (not (get-in db [:chats chat-id :group-chat]))
+              (not ((:contacts/contacts db) chat-id)))
+    (add-contact cofx chat-id)))
 
 (fx/defn add-contacts-filter [{:keys [db]} public-key action]
   (when (not= (get-in db [:account/account :public-key]) public-key)
@@ -263,6 +272,7 @@
 (fx/defn open-chat
   [cofx public-key]
   (fx/merge cofx
+            (add-contact public-key)
             (chat.models/start-chat public-key {:navigation-reset? true})))
 
 (fx/defn hide-contact

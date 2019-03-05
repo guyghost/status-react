@@ -40,11 +40,6 @@
       :fiat-value (str "~" fiat-value " " (:code currency))})))
 
 (re-frame/reg-sub
- :tribute-to-talk/tributes
- (fn [db [_ identity]]
-   (get db :tribute-to-talk/tributes)))
-
-(re-frame/reg-sub
  :tribute-to-talk/get-tribute
  (fn [db [_ identity]]
-   (get-in db [:tribute-to-talk/tributes identity])))
+   (get-in db [:contacts/contacts identity :tribute])))

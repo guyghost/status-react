@@ -15,9 +15,9 @@
 
 (defn get-tribute [web3 contract public-key cb]
   (log/warn "### entering eth/get-tribute" web3 contract public-key)
-  #_(js/setTimeout #(cb 250) 1000)
-  (ethereum/call web3
-                 (ethereum/call-params contract "getFee(address)" public-key)
-                 (fn [_ tribute]
-                   (log/warn "### eth/get-tribute" tribute)
-                   (cb tribute))))
+  (js/setTimeout #(cb 250) 2000)
+  #_(ethereum/call web3
+                   (ethereum/call-params contract "getFee(address)" public-key)
+                   (fn [_ tribute]
+                     (log/warn "### eth/get-tribute" tribute)
+                     (cb tribute))))
