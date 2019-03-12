@@ -130,9 +130,7 @@
      [react/view]
      [button/button {:style               components.styles/flex
                      :disabled?           (not sign-enabled?)
-                     :on-press            #(re-frame/dispatch [:set-in
-                                                               [:wallet :send-transaction :show-password-input?]
-                                                               true])
+                     :on-press            #(re-frame/dispatch [:wallet.ui/sign-transaction-button-clicked])
                      :text-style          {:color :white}
                      :accessibility-label :sign-transaction-button}
       (i18n/label :t/transactions-sign-transaction)

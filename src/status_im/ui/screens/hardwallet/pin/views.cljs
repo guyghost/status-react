@@ -147,6 +147,7 @@
                                        :t/current-pin)
                   :description-label (case step
                                        :current :t/current-pin-description
+                                       :sign :t/current-pin-description
                                        :login :t/login-pin-description
                                        :t/new-pin-description)
                   :step              step

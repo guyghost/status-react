@@ -98,6 +98,10 @@
   (when (and @node-started status)
     (.hashTransaction status rpcParams callback)))
 
+(defn hash-message [message callback]
+  (when (and @node-started status)
+    (.hashMessage status message callback)))
+
 (defn sign-typed-data [data password callback]
   (when (and @node-started status)
     (.signTypedData status data password callback)))

@@ -30,10 +30,11 @@
                                    #(actions/default-handler)))]
      [toolbar/content-title {:color :white} title]]))
 
-(defview enter-password-buttons [value-atom spinning? cancel-handler sign-handler sign-label]
+(defview enter-password-buttons [value-atom {:keys [spinning? keycard?]} cancel-handler sign-handler sign-label]
   (letsubs [network-status [:network-status]]
     (let [password      (:password @value-atom)
-          sign-enabled? (and (not (nil? password)) (not= password ""))]
+          sign-enabled? (or keycard?
+                            (and (not (nil? password)) (not= password "")))]
       [bottom-buttons/bottom-buttons
        styles/sign-buttons
        [button/button {:style               components.styles/flex
@@ -83,7 +84,7 @@
 ;; SIGN MESSAGE FROM DAPP
 (defview sign-message-modal []
   (letsubs [value-atom (reagent/atom nil)
-            {:keys [decoded-data in-progress? typed?] :as screen-params} [:get-screen-params :wallet-sign-message-modal]
+            {:keys [decoded-data in-progress? typed? keycard?] :as screen-params} [:get-screen-params :wallet-sign-message-modal]
             network-status [:network-status]]
     [wallet.components/simple-screen {:status-bar-type :modal-wallet}
      [toolbar true (i18n/label :t/sign-message)]
@@ -102,12 +103,17 @@
                             (str "Domain\n" (:domain decoded-data) "\nMessage\n" (:message decoded-data))
                             decoded-data)}
           nil]]]]
-      [enter-password-buttons value-atom false
+      [enter-password-buttons
+       value-atom
+       {:spinning? false :keycard? keycard?}
        #(re-frame/dispatch [:wallet/discard-transaction-navigate-back])
-       #(re-frame/dispatch [:wallet/sign-message typed? (merge screen-params @value-atom)
+       #(re-frame/dispatch [:wallet.ui/sign-message-button-clicked
+                            typed?
+                            (merge screen-params @value-atom)
                             (fn []
                               (swap! value-atom assoc :wrong-password? true))])
        :t/transactions-sign]
-      [password-input-panel value-atom :t/signing-message-phrase-description false]
+      (when-not keycard?
+        [password-input-panel value-atom :t/signing-message-phrase-description false])
       (when in-progress?
         [react/view styles/processing-view])]]))
