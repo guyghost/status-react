@@ -774,7 +774,7 @@
  :chat.ui/show-profile
  (fn [cofx [_ identity]]
    (fx/merge (assoc-in cofx [:db :contacts/identity] identity)
-             (contact/add-contact identity)
+             (contact/add-contact identity false)
              (tribute-to-talk/check-tribute identity)
              (navigation/navigate-to-cofx :profile nil))))
 
@@ -1553,7 +1553,7 @@
  (fn [cofx [_ public-key]]
    (if config/partitioned-topic-enabled?
      (contact/add-contacts-filter cofx public-key :add-contact)
-     (contact/add-contact cofx public-key))))
+     (contact/add-contact cofx public-key true))))
 
 (handlers/register-handler-fx
  :contact.ui/block-contact-pressed

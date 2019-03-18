@@ -97,3 +97,5 @@
 (def v5 (assoc-in v4 [:properties :device-info]
                   {:type       :list
                    :objectType :contact-device-info}))
+
+(def v6 (assoc-in v5 [:properties :system-tags] {:type "string[]"}))

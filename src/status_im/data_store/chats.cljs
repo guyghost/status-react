@@ -53,6 +53,7 @@
       (update :contacts #(into #{} %))
       (update :members-joined #(into #{} %))
       (update :tags #(into #{} %))
+      (update :system-tags #(into #{} %))
       (update :membership-updates  (partial unmarshal-membership-updates chat-id))
       (update :last-clock-value utils.clocks/safe-timestamp)
       (update :last-message-content utils/safe-read-message-content)))

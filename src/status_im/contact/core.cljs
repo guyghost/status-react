@@ -3,6 +3,7 @@
             [status-im.accounts.db :as accounts.db]
             [status-im.chat.models :as chat.models]
             [clojure.set :as clojure.set]
+            [taoensso.timbre :as log]
             [status-im.contact.db :as contact.db]
             [status-im.contact.device-info :as device-info]
             [status-im.data-store.contacts :as contacts-store]
@@ -26,10 +27,14 @@
 (fx/defn load-contacts
   [{:keys [db all-contacts]}]
   (let [contacts-list (map #(vector (:public-key %) %) all-contacts)
-        contacts (into {} contacts-list)]
+        contacts (into {} contacts-list)
+        tr-to-talk-enabled? (get-in db  [:account/account :settings :tribute-to-talk :snt-amount])]
     {:db (-> db
              (update :contacts/contacts #(merge contacts %))
-             (assoc :contacts/blocked (contact.db/get-blocked-contacts all-contacts)))}))
+             (assoc :contacts/blocked (contact.db/get-blocked-contacts all-contacts))
+             (#(if tr-to-talk-enabled?
+                 (assoc % :contacts/whitelisted (contact.db/get-contact-whitelist all-contacts))
+                 %)))}))
 
 (defn can-add-to-contacts? [{:keys [pending? dapp?]}]
   (and (not dapp?)
@@ -72,24 +77,22 @@
 
 (fx/defn add-contact
   "Add a contact and set pending to false"
-  [{:keys [db] :as cofx} public-key]
+  [{:keys [db] :as cofx} public-key added?]
   (when  (and
           (not (get-in db [:chats public-key :group-chat]))
           (not ((:contacts/contacts db) public-key))
           (not= (get-in db [:account/account :public-key]) public-key))
-    (let [contact (-> (build-contact cofx public-key)
-                      (assoc :pending? false
-                             :hide-contact? false))]
+    (let [tmp-contact  (build-contact cofx public-key)
+          contact (cond-> tmp-contact
+                    :always (assoc :hide-contact? (not added?))
+                    added?  (assoc :system-tags (conj (:system-tags tmp-contact) :contact/added)
+                                   :pending? false))
+          _ (log/warn "#add-contact" tmp-contact)]
       (fx/merge cofx
                 {:db (assoc-in db [:contacts/new-identity] "")}
                 (upsert-contact contact)
-                (send-contact-request contact)))))
-
-(fx/defn maybe-add-contact
-  [{:keys [db] :as cofx} chat-id]
-  (when  (and (not (get-in db [:chats chat-id :group-chat]))
-              (not ((:contacts/contacts db) chat-id)))
-    (add-contact cofx chat-id)))
+                #(when added?
+                   (send-contact-request % contact))))))
 
 (fx/defn add-contacts-filter [{:keys [db]} public-key action]
   (when (not= (get-in db [:account/account :public-key]) public-key)
@@ -109,6 +112,20 @@
                           :minPow   1
                           :callback (constantly nil)}]}})))
 
+(fx/defn add-system-tag
+  "add a system tag to the contact"
+  [{:keys [db] :as cofx} public-key tag]
+  (let [tags (conj (get-in db [:contacts/contacts public-key :system-tags] #{}) tag)]
+    {:db (assoc-in db [:contacts/contacts public-key :system-tags] tags)
+     :data-store/tx [(contacts-store/add-contact-tag-tx public-key tag true)]}))
+
+(fx/defn remove-system-tag
+  "remove a system tag from the contact"
+  [{:keys [db] :as cofx} public-key tag]
+  (let [tags (disj (get-in db [:contacts/contacts public-key :system-tags] #{}) tag)]
+    {:db (assoc-in db [:contacts/contacts public-key :system-tags] tags)
+     :data-store/tx [(contacts-store/remove-contact-tag-tx public-key tag true)]}))
+
 (fx/defn add-tag
   "add a tag to the contact"
   [{:keys [db] :as cofx}]
@@ -116,14 +133,14 @@
         public-key (get-in db [:current-chat-id])
         tags (conj (get-in db [:contacts/contacts public-key :tags] #{}) tag)]
     {:db (assoc-in db [:contacts/contacts public-key :tags] tags)
-     :data-store/tx [(contacts-store/add-contact-tag-tx public-key tag)]}))
+     :data-store/tx [(contacts-store/add-contact-tag-tx public-key tag false)]}))
 
 (fx/defn remove-tag
   "remove a tag from the contact"
   [{:keys [db] :as cofx} public-key tag]
   (let [tags (disj (get-in db [:contacts/contacts public-key :tags] #{}) tag)]
     {:db (assoc-in db [:contacts/contacts public-key :tags] tags)
-     :data-store/tx [(contacts-store/remove-contact-tag-tx public-key tag)]}))
+     :data-store/tx [(contacts-store/remove-contact-tag-tx public-key tag false)]}))
 
 (fx/defn block-contact-confirmation
   [cofx public-key]
@@ -272,7 +289,6 @@
 (fx/defn open-chat
   [cofx public-key]
   (fx/merge cofx
-            (add-contact public-key)
             (chat.models/start-chat public-key {:navigation-reset? true})))
 
 (fx/defn hide-contact

@@ -23,6 +23,7 @@
 ;;we can't validate public key, because for dapps public-key is just string
 (spec/def :contact/public-key :global/not-empty-string)
 (spec/def :contact/status (spec/nilable string?))
+(spec/def :contact/system-tags (spec/coll-of string? :kind set?))
 (spec/def :contact/tags (spec/coll-of string? :kind set?))
 (spec/def :contact/tribute (spec/nilable map?))
 
@@ -38,6 +39,7 @@
                                                 :contact/photo-path
                                                 :contact/public-key
                                                 :contact/status
+                                                :contact/system-tags
                                                 :contact/tags
                                                 :contact/tribute]))
 
@@ -141,6 +143,16 @@
 (defn get-blocked-contacts
   [contacts]
   (into #{} (map :public-key (filter :blocked? contacts))))
+
+(defn get-contact-whitelist
+  [contacts]
+  (let [whitelist-fn #(seq (clojure.set/intersection
+                            #{:contact/added :ttt/received}
+                            (:system-tags %)))]
+    (into #{}
+          (->> contacts
+               (filter whitelist-fn))
+          (map :public-key))))
 
 (defn blocked?
   [db contact]

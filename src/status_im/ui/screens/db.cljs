@@ -34,6 +34,7 @@
              :discover-search-tags               #{}
              :discover-current-dapp              {}
              :tags                               []
+             :system-tags                        []
              :sync-state                         :done
              :app-state                          "active"
              :wallet.transactions                constants/default-wallet-transactions

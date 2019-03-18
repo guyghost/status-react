@@ -26,7 +26,8 @@
                :chat-name (chat-name chat contact)
                :name (:name contact)
                :random-name (gfycat/generate-gfy (:public-key contact)))
-        (update :tags clojure.set/union (:tags contact)))
+        (update :tags clojure.set/union (:tags contact))
+        (update :system-tags clojure.set/union (:system-tags contact)))
     (let [pending-invite-inviter-name
           (group-chats.db/get-pending-invite-inviter-name contacts
                                                           chat

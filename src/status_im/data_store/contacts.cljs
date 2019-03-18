@@ -6,7 +6,8 @@
 
 (defn- normalize-contact [contact]
   (-> contact
-      (update :tags #(into #{} %))))
+      (update :tags #(into #{} %))
+      (update :system-tags #(into #{} %))))
 
 (defn- serialize-contact [contact]
   (update contact :device-info #(or (vals %) [])))
@@ -93,20 +94,22 @@
 
 (defn add-contact-tag-tx
   "Returns tx function for adding chat contacts"
-  [public-key tag]
+  [public-key tag system?]
   (fn [realm]
-    (let [contact       (get-contact-by-id public-key realm)
-          existing-tags (object/get contact "tags")]
-      (aset contact "tags"
+    (let [tags-key (if system? "system-tags" "tags")
+          contact       (get-contact-by-id public-key realm)
+          existing-tags (object/get contact tags-key)]
+      (aset contact tags-key
             (clj->js (into #{} (concat tag
                                        (core/list->clj existing-tags))))))))
 
 (defn remove-contact-tag-tx
   "Returns tx function for removing chat contacts"
-  [public-key tag]
+  [public-key tag system?]
   (fn [realm]
-    (let [contact       (get-contact-by-id public-key realm)
-          existing-tags (object/get contact "tags")]
-      (aset contact "tags"
+    (let [tags-key (if system? "system-tags" "tags")
+          contact       (get-contact-by-id public-key realm)
+          existing-tags (object/get contact tags-key)]
+      (aset contact tags-key
             (clj->js (remove (into #{} tag)
                              (core/list->clj existing-tags)))))))

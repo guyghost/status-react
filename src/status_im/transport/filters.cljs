@@ -94,7 +94,7 @@
              [(when action
                 (case action
                   :add-contact
-                  (contact/add-contact public-key)
+                  (contact/add-contact public-key true)
 
                   :open-chat
                   (contact/open-chat public-key)))]
