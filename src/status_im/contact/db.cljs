@@ -25,7 +25,7 @@
 (spec/def :contact/status (spec/nilable string?))
 (spec/def :contact/system-tags (spec/coll-of string? :kind set?))
 (spec/def :contact/tags (spec/coll-of string? :kind set?))
-(spec/def :contact/tribute (spec/nilable map?))
+(spec/def :contact/tribute (spec/nilable #(and (number? %) (pos? %))))
 
 (spec/def :contact/contact (spec/keys  :req-un [:contact/name]
                                        :opt-un [:contact/address
@@ -146,13 +146,11 @@
 
 (defn get-contact-whitelist
   [contacts]
-  (let [whitelist-fn #(seq (clojure.set/intersection
-                            #{:contact/added :ttt/received}
-                            (:system-tags %)))]
-    (into #{}
-          (->> contacts
-               (filter whitelist-fn))
-          (map :public-key))))
+  (reduce (fn [acc {:keys [public-key system-tags]}]
+            (if (or (contains? system-tags :contact-added)
+                    (contains? system-tags :ttt/received))
+              (conj acc public-key) acc))
+          (hash-set) contacts))
 
 (defn blocked?
   [db contact]

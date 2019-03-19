@@ -33,8 +33,7 @@
              (update :contacts/contacts #(merge contacts %))
              (assoc :contacts/blocked (contact.db/get-blocked-contacts all-contacts))
              (#(if tr-to-talk-enabled?
-                 (assoc % :contacts/whitelisted (contact.db/get-contact-whitelist all-contacts))
-                 %)))}))
+                 (assoc % :contacts/whitelist (contact.db/get-contact-whitelist all-contacts)) %)))}))
 
 (defn can-add-to-contacts? [{:keys [pending? dapp?]}]
   (and (not dapp?)
@@ -75,6 +74,11 @@
       (protocol/send (message.contact/map->ContactRequestConfirmed (own-info db)) public-key cofx)
       (protocol/send (message.contact/map->ContactRequest (own-info db)) public-key cofx))))
 
+(fx/defn add-to-whitelist
+  "Add contact to whitelist"
+  [{:keys [db]} public-key]
+  {:db (update db :contacts/whitelist #(conj % public-key))})
+
 (fx/defn add-contact
   "Add a contact and set pending to false"
   [{:keys [db] :as cofx} public-key added?]
@@ -91,6 +95,8 @@
       (fx/merge cofx
                 {:db (assoc-in db [:contacts/new-identity] "")}
                 (upsert-contact contact)
+                #(when added?
+                   (add-to-whitelist % public-key))
                 #(when added?
                    (send-contact-request % contact))))))
 

@@ -142,6 +142,19 @@
       (ethereum.tribute/get-tribute (:web3 db) contract identity cb)))
   {:db db})
 
+(fx/defn set-tribute  [{:keys [db] :as cofx} identity value]
+  (if (pos? value)
+    {:db (-> db
+             (assoc-in [:contacts/contacts identity :tribute] value)
+             (update-in [:contacts/contacts identity :system-tags] #(conj % :ttt/required)))}
+    {:db (update-in db [:contacts/contacts identity :system-tags] #(conj % :ttt/none))}))
+
+(fx/defn pay-tribute [{:keys [db] :as cofx} identity]
+  {:db (update-in db [:contacts/contacts identity :system-tags]
+                  #(-> %
+                       (conj :ttt/paid)
+                       (disj :ttt/required)))})
+
 (defn status-label [[status value]]
   (cond (= status :paid)
         (i18n/label :t/tribute-state-paid)

@@ -1824,15 +1824,14 @@
  :tribute-to-talk.ui/set-tribute
  (fn [{:keys [db] :as cofx}  [_ identity value]]
    (log/warn "event set-tribute" identity value)
-   {:db (update-in db [:contacts/contacts identity :tribute]
-                   (fn [{:keys [status]}]
-                     {:value value
-                      :status (or status (if (> value 0) :required :none))}))}))
+   (tribute-to-talk/set-tribute cofx identity value)))
 
 (handlers/register-handler-fx
  :tribute-to-talk.ui/pay-tribute
  (fn [{:keys [db] :as cofx}  [_ identity]]
-   {:db (assoc-in db [:contacts/contacts identity :tribute :status] :paid)}))
+   (fx/merge cofx
+             (tribute-to-talk/pay-tribute identity)
+             #_(contact/add-to-whitelist identity))))
 
 (handlers/register-handler-fx
  :tribute-to-talk.ui/check-tribute
