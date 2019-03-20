@@ -32,6 +32,7 @@
   in order to stop receiving that message"
   [cofx now-in-s filter-chat-id js-message]
   (let [blocked-contacts (get-in cofx [:db :contacts/blocked] #{})
+        whitelist (get-in cofx [:db :contacts/whitelist])
         {{:keys [payload sig timestamp ttl]} :message
          dedup-id :id
          raw-payload :raw-payload} (unwrap-message js-message)
@@ -40,6 +41,7 @@
                            transit/deserialize)]
     (when (and sig
                status-message
+               (or (nil? whitelist) (whitelist sig))
                (not (blocked-contacts sig)))
       (try
         (when-let [valid-message (protocol/validate status-message)]
