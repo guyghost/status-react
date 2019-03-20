@@ -144,11 +144,14 @@
   [contacts]
   (into #{} (map :public-key (filter :blocked? contacts))))
 
+(defn whitelist? [system-tags]
+  (or (contains? system-tags :contact-added)
+      (contains? system-tags :ttt/received)))
+
 (defn get-contact-whitelist
   [contacts]
   (reduce (fn [acc {:keys [public-key system-tags]}]
-            (if (or (contains? system-tags :contact-added)
-                    (contains? system-tags :ttt/received))
+            (if (whitelist? system-tags)
               (conj acc public-key) acc))
           (hash-set) contacts))
 

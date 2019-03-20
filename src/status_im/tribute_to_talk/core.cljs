@@ -134,8 +134,7 @@
 
 (fx/defn check-tribute [{:keys [db] :as cofx} identity]
   (when (and (not (get-in db [:chats identity :group-chat]))
-             (not (#{:paid :none}
-                   (get-in db [:contacts/contacts identity :tribute :status]))))
+             (not (contact/whitelist? (get-in db [:contacts/contacts identity :system-tags]))))
     (let [network (get-in db [:account/account :networks (:network db)])
           contract (get ethereum.tribute/contracts (ethereum.core/network->chain-keyword network))
           cb #(re-frame/dispatch [:tribute-to-talk.ui/set-tribute identity %1])]
@@ -145,22 +144,18 @@
 (fx/defn set-tribute  [{:keys [db] :as cofx} identity value]
   (if (pos? value)
     {:db (-> db
-             (assoc-in [:contacts/contacts identity :tribute] value)
-             (update-in [:contacts/contacts identity :system-tags] #(conj % :ttt/required)))}
-    {:db (update-in db [:contacts/contacts identity :system-tags] #(conj % :ttt/none))}))
+             (assoc-in [:contacts/contacts identity :tribute] value))}))
 
 (fx/defn pay-tribute [{:keys [db] :as cofx} identity]
   {:db (update-in db [:contacts/contacts identity :system-tags]
-                  #(-> %
-                       (conj :ttt/paid)
-                       (disj :ttt/required)))})
+                  #(conj % :ttt/paid))})
 
-(defn status-label [[status value]]
-  (cond (= status :paid)
+(defn status-label [{:keys [system-tags tribute]}]
+  (cond (contains? system-tags :ttt/paid)
         (i18n/label :t/tribute-state-paid)
-        (= status :pending)
-        (i18n/label :t/tribute-state-pending)
-        (= status :required)
-        (i18n/label :t/tribute-state-required {:snt-amount value})
+        ;(= status :pending)
+        ;(i18n/label :t/tribute-state-pending)
+        (pos? tribute)
+        (i18n/label :t/tribute-state-required {:snt-amount tribute})
         :else nil))
 

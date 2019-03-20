@@ -17,7 +17,7 @@
    toolbar/default-nav-back
    [toolbar/content-title ""]])
 
-(defn actions [{:keys [pending? public-key tribute]}]
+(defn actions [{:keys [pending? public-key tribute] :as contact}]
   (concat (if (or (nil? pending?) pending?)
             [{:label               (i18n/label :t/add-to-contacts)
               :icon                :main-icons/add-contact
@@ -32,7 +32,7 @@
                     :action              #(re-frame/dispatch [:contact.ui/send-message-pressed {:public-key public-key}])
                     :accessibility-label :start-conversation-button}
              tribute
-             (assoc :subtext (tribute-to-talk/status-label tribute)))
+             (assoc :subtext (tribute-to-talk/status-label contact)))
            {:label               (i18n/label :t/send-transaction)
             :icon                :main-icons/send
             :action              #(re-frame/dispatch [:profile/send-transaction public-key])
