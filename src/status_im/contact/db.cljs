@@ -10,32 +10,29 @@
 
 ;;Contact
 
-;;we can't validate public key, because for dapps public-key is just string
 (spec/def :contact/public-key :global/not-empty-string)
 (spec/def :contact/name :global/not-empty-string)
 (spec/def :contact/address (spec/nilable :global/address))
 (spec/def :contact/photo-path (spec/nilable string?))
-(spec/def :contact/status (spec/nilable string?))
 (spec/def :contact/fcm-token (spec/nilable string?))
-(spec/def :contact/description (spec/nilable string?))
 (spec/def :contact/last-updated (spec/nilable int?))
 (spec/def :contact/last-online (spec/nilable int?))
-(spec/def :contact/pending? boolean?)
-(spec/def :contact/tags (spec/coll-of string? :kind set?))
-(spec/def :contact/blocked? boolean?)
 
-(spec/def :contact/contact (spec/keys  :req-un [:contact/name]
-                                       :opt-un [:contact/public-key
-                                                :contact/address
+;; contact/blocked: the user is blocked
+;; contact/request-received: the user has sent a contact request
+;; contact/added: the user was added to the contacts and a contact request was sent
+(spec/def :contact/tags (spec/coll-of string? :kind set?))
+(spec/def :contact/system-tags (spec/coll-of keyword? :kind set?))
+
+(spec/def :contact/contact (spec/keys  :req-un [:contact/public-key
+                                                :contact/name]
+                                       :opt-un [:contact/address
                                                 :contact/photo-path
-                                                :contact/status
                                                 :contact/last-updated
                                                 :contact/last-online
-                                                :contact/pending?
                                                 :contact/fcm-token
-                                                :contact/description
-                                                :contact/blocked?
-                                                :contact/tags]))
+                                                :contact/tags
+                                                :contact/system-tags]))
 
 ;;Contact list ui props
 (spec/def :contact-list-ui/edit? boolean?)
@@ -72,10 +69,11 @@
       (subs (.sha3 js-dependencies/Web3.prototype normalized-key #js {:encoding "hex"}) 26))))
 
 (defn public-key->new-contact [public-key]
-  {:name       (gfycat/generate-gfy public-key)
-   :address    (public-key->address public-key)
-   :photo-path (identicon/identicon public-key)
-   :public-key public-key})
+  {:name        (gfycat/generate-gfy public-key)
+   :address     (public-key->address public-key)
+   :photo-path  (identicon/identicon public-key)
+   :public-key  public-key
+   :system-tags #{}})
 
 (defn public-key->contact
   [contacts public-key]
@@ -99,13 +97,6 @@
                      (clojure.string/lower-case name2))))
         (vals contacts)))
 
-(defn active
-  [contacts]
-  (->> contacts
-       (remove (fn [[_ {:keys [pending? blocked?]}]]
-                 (or pending? blocked?)))
-       sort-contacts))
-
 (defn filter-dapps
   [v dev-mode?]
   (remove #(when-not dev-mode? (true? (:developer? %))) v))
@@ -122,22 +113,57 @@
 
 (defn get-all-contacts-in-group-chat
   [members admins contacts current-account]
-  (let [current-account-contact (-> current-account
-                                    (select-keys [:name :photo-path :public-key]))
-        all-contacts            (assoc contacts (:public-key current-account-contact) current-account-contact)]
+  (let [{:keys [public-key] :as current-account-contact}
+        (select-keys current-account [:name :photo-path :public-key])
+        all-contacts (assoc contacts public-key current-account-contact)]
     (->> members
          (map #(or (get all-contacts %)
                    (public-key->new-contact %)))
-         (remove :dapp?)
          (sort-by (comp clojure.string/lower-case :name))
          (map #(if (admins (:public-key %))
                  (assoc % :admin? true)
                  %)))))
 
-(defn get-blocked-contacts
-  [contacts]
-  (into #{} (map :public-key (filter :blocked? contacts))))
+(defn pending?
+  ([{:keys [system-tags]}]
+   (and (contains? system-tags :contact/request-received)
+        (not (contains? system-tags :contact/added))))
+  ([db public-key]
+   (pending? (get-in db [:contacts/contacts public-key]))))
+
+(defn active?
+  ([{:keys [system-tags]}]
+   (and (contains? system-tags :contact/added)
+        (not (contains? system-tags :contact/blocked))))
+  ([db public-key]
+   (active? (get-in db [:contacts/contacts public-key]))))
 
 (defn blocked?
-  [db contact]
-  (get-in db [:contacts/contacts contact :blocked?]))
+  ([{:keys [system-tags]}]
+   (contains? system-tags :contact/blocked))
+  ([db public-key]
+   (blocked? (get-in db [:contacts/contacts public-key]))))
+
+(defn enrich-contact
+  [{:keys [system-tags] :as contact}]
+  (assoc contact
+         :blocked? (blocked? contact)
+         :pending? (pending? contact)
+         :active? (active? contact)
+         :added? (contains? system-tags :contact/added)))
+
+(defn get-blocked-contacts
+  [contacts]
+  (reduce (fn [acc {:keys [public-key] :as contact}]
+            (if (blocked? contact)
+              (conj acc public-key)
+              acc))
+          #{}
+          contacts))
+
+(defn get-active-contacts
+  [contacts]
+  (->> contacts
+       (filter (fn [[_ contact]]
+                 (active? contact)))
+       sort-contacts))

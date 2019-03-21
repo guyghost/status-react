@@ -4,6 +4,7 @@
             [status-im.i18n :as i18n]
             [status-im.utils.fx :as fx]
             [status-im.contact.device-info :as device-info]
+            [status-im.contact.db :as contact.db]
             [status-im.ui.screens.navigation :as navigation]
             [status-im.utils.config :as config]
             [status-im.utils.platform :as utils.platform]
@@ -53,6 +54,15 @@
                                 :src     current-public-key
                                 :payload payload}}))
 
+(defn merge-system-tags
+  [new-contact old-contact]
+  (cond-> (or new-contact #{})
+    (contains? old-contact :contact/added)
+    (conj :contact/added)
+
+    (contains? old-contact :contact/request-received)
+    (conj :contact/request-received)))
+
 (defn merge-contact [local remote]
   (let [[old-contact new-contact] (sort-by :last-updated [remote local])]
     (-> local
@@ -60,9 +70,7 @@
         (assoc :device-info (device-info/merge-info (:last-updated new-contact)
                                                     (:device-info old-contact)
                                                     (vals (:device-info new-contact))))
-        (assoc :pending? (boolean
-                          (and (:pending? local true)
-                               (:pending? remote true)))))))
+        (update :system-tags merge-system-tags (:system-tags old-contact)))))
 
 (def merge-contacts (partial merge-with merge-contact))
 
@@ -123,10 +131,17 @@
     (transport.pairing/SyncInstallation. {} account {})))
 
 (defn- contact-batch->sync-installation-message [batch]
-  (let [contacts-to-sync (reduce (fn [acc {:keys [public-key] :as contact}]
-                                   (assoc acc public-key (dissoc contact :photo-path)))
-                                 {}
-                                 batch)]
+  (let [contacts-to-sync
+        (reduce (fn [acc {:keys [public-key system-tags] :as contact}]
+                  (assoc acc
+                         public-key
+                         (-> contact
+                             (dissoc :photo-path)
+                             ;; for compatibility before contact.v7
+                             (assoc :pending?
+                                    (contact.db/pending? contact)))))
+                {}
+                batch)]
     (transport.pairing/SyncInstallation. contacts-to-sync {} {})))
 
 (defn- chats->sync-installation-messages [{:keys [db]}]
@@ -140,9 +155,7 @@
 
 (defn sync-installation-messages [{:keys [db] :as cofx}]
   (let [contacts (:contacts/contacts db)
-        contact-batches (partition-all contact-batch-n (->> contacts
-                                                            vals
-                                                            (remove :dapp?)))]
+        contact-batches (partition-all contact-batch-n (vals contacts))]
     (concat (mapv contact-batch->sync-installation-message contact-batches)
 
             [(sync-installation-account-message cofx)]

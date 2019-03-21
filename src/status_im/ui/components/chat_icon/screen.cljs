@@ -34,22 +34,19 @@
 
 (defview pending-contact-badge
   [chat-id {:keys [pending-wrapper pending-outer-circle pending-inner-circle]}]
-  (letsubs [pending-contact? [:get-in [:contacts/contacts chat-id :pending?]]]
-    (when pending-contact?
+  (letsubs [{:keys [pending?]} [:contacts/contact-by-address chat-id]]
+    (when pending?
       [react/view pending-wrapper
        [react/view pending-outer-circle
         [react/view pending-inner-circle]]])))
 
 (defn chat-icon-view
   [chat-id _group-chat name _online styles & [hide-dapp?]]
-  (let [photo-path (re-frame.core/subscribe [:contacts/chat-photo chat-id])
-        dapp?      (re-frame.core/subscribe [:get-in [:contacts/contacts chat-id :dapp?]])]
+  (let [photo-path (re-frame.core/subscribe [:contacts/chat-photo chat-id])]
     [react/view (:container styles)
      (if-not (string/blank? @photo-path)
        [photos/photo @photo-path styles]
        [default-chat-icon name styles])
-     (when (and @dapp? (not hide-dapp?))
-       [dapp-badge styles])
      [pending-contact-badge chat-id styles]]))
 
 (defn chat-icon-view-toolbar [chat-id group-chat name color online]

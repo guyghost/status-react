@@ -375,12 +375,12 @@
   (views/letsubs [identity      [:contacts/current-contact-identity]
                   maybe-contact [:contacts/current-contact]]
     (let [contact (or maybe-contact (contact.db/public-key->new-contact identity))
-          {:keys [pending? public-key]} contact]
+          {:keys [added? public-key]} contact]
       [react/view {:style styles/chat-profile-body}
        [profile.views/profile-badge contact]
        ;; for private chat, public key will be chat-id
        [react/view
-        (if (or (nil? pending?) pending?)
+        (if added?
           [react/touchable-highlight {:on-press #(re-frame/dispatch [:contact.ui/add-to-contact-pressed public-key])}
            [react/view {:style styles/chat-profile-row}
             [react/view {:style               styles/chat-profile-icon-container

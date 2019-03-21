@@ -7,16 +7,16 @@
 
 (deftest merge-contact-test
   (testing "vanilla contacts"
-    (let [contact-1 {:pending? false
+    (let [contact-1 {:system-tags #{:contact/added :contact/request-received}
                      :this-should-be-kept true
                      :last-updated 1
                      :name "name-v1"
                      :photo-path "photo-v1"}
-          contact-2 {:pending? false
+          contact-2 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :photo-path "photo-v2"}
-          expected  {:pending? false
+          expected  {:system-tags #{:contact/added :contact/request-received}
                      :this-should-be-kept true
                      :last-updated 2
                      :device-info nil
@@ -24,14 +24,14 @@
                      :photo-path "photo-v2"}]
       (is (= expected (pairing/merge-contact contact-1 contact-2)))))
   (testing "without last-updated"
-    (let [contact-1 {:pending? false
+    (let [contact-1 {:system-tags #{:contact/added :contact/request-received}
                      :name "name-v1"
                      :photo-path "photo-v1"}
-          contact-2 {:pending? false
+          contact-2 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :photo-path "photo-v2"}
-          expected  {:pending? false
+          expected  {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :device-info nil
                      :name "name-v2"
@@ -39,26 +39,26 @@
       (is (= expected (pairing/merge-contact contact-1 contact-2)))))
   (testing "nil contact"
     (let [contact-1 nil
-          contact-2 {:pending? false
+          contact-2 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :photo-path "photo-v2"}
-          expected  {:pending? false
+          expected  {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :device-info nil
                      :name "name-v2"
                      :photo-path "photo-v2"}]
       (is (= expected (pairing/merge-contact contact-1 contact-2)))))
   (testing "not pending in one device"
-    (let [contact-1 {:pending? false
+    (let [contact-1 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 1
                      :name "name-v1"
                      :photo-path "photo-v1"}
-          contact-2 {:pending? true
+          contact-2 {:system-tags #{:contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :photo-path "photo-v2"}
-          expected  {:pending? false
+          expected  {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :device-info nil
                      :name "name-v2"
@@ -66,18 +66,18 @@
       (is (= expected (pairing/merge-contact contact-1 contact-2)))))
   (testing "pending in one device and nil"
     (let [contact-1 nil
-          contact-2 {:pending? true
+          contact-2 {:system-tags #{:contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :photo-path "photo-v2"}
-          expected  {:pending? true
+          expected  {:system-tags #{:contact/request-received}
                      :last-updated 2
                      :device-info nil
                      :name "name-v2"
                      :photo-path "photo-v2"}]
       (is (= expected (pairing/merge-contact contact-1 contact-2)))))
   (testing "device-info"
-    (let [contact-1 {:pending? false
+    (let [contact-1 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 1
                      :name "name-v1"
                      :device-info {"1" {:timestamp 1
@@ -87,7 +87,7 @@
                                         :fcm-token "token-2"
                                         :id "2"}}
                      :photo-path "photo-v1"}
-          contact-2 {:pending? false
+          contact-2 {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :name "name-v2"
                      :device-info {"2" {:timestamp 2
@@ -97,7 +97,7 @@
                                         :fcm-token "token-3"
                                         :id "3"}}
                      :photo-path "photo-v2"}
-          expected  {:pending? false
+          expected  {:system-tags #{:contact/added :contact/request-received}
                      :last-updated 2
                      :device-info {"1" {:timestamp 1
                                         :fcm-token "token-1"
@@ -119,38 +119,38 @@
                              :public-key "contact-1"
                              :last-updated 0
                              :photo-path "old-contact-1"
-                             :pending? true}
+                             :system-tags #{:contact/request-received}}
             new-contact-1   {:name "new-contact-one"
                              :public-key "contact-1"
                              :last-updated 1
                              :photo-path "new-contact-1"
-                             :pending? false}
+                             :system-tags #{:contact/added :contact/request-received}}
             old-contact-2   {:name "old-contact-2"
                              :public-key "contact-2"
                              :last-updated 0
                              :photo-path "old-contact-2"
-                             :pending? false}
+                             :system-tags #{:contact/added :contact/request-received}}
             new-contact-2   {:name "new-contact-2"
                              :public-key "contact-2"
                              :last-updated 1
                              :photo-path "new-contact-2"
-                             :pending? false}
+                             :system-tags #{:contact/added :contact/request-received}}
             contact-3        {:name "contact-3"
                               :public-key "contact-3"
                               :photo-path "contact-3"
-                              :pending? false}
+                              :system-tags #{:contact/added :contact/request-received}}
             contact-4        {:name "contact-4"
                               :public-key "contact-4"
-                              :pending? true}
+                              :system-tags #{:contact/request-received}}
             local-contact-5  {:name "contact-5"
                               :photo-path "local"
                               :public-key "contact-5"
-                              :pending? true
+                              :system-tags #{:contact/request-received}
                               :last-updated 1}
             remote-contact-5 {:name "contact-5"
                               :public-key "contact-5"
                               :photo-path "remote"
-                              :pending? true
+                              :system-tags #{:contact/request-received}
                               :last-updated 1}
             cofx {:db {:account/account {:public-key "us"}
                        :contacts/contacts {"contact-1" old-contact-1
