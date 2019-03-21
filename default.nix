@@ -57,6 +57,9 @@ with pkgs;
       ++ lib.optional targetDesktop statusDesktop.buildInputs
       ++ lib.optional targetMobile statusMobile.buildInputs;
     shellHook =
+      ''
+        set -e
+      '' +
       lib.optionalString targetDesktop statusDesktop.shellHook +
       lib.optionalString targetMobile statusMobile.shellHook +
       ''
