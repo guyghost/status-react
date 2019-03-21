@@ -118,18 +118,47 @@
     (i18n/label :t/empty-chat-description)]])
 
 (defn empty-chat-container-one-to-one
-  [contact-name tribute photo-path]
+  [{:keys [chat-id tribute name]} {:keys [system-tags]}]
   [react/view
    [react/view (assoc (dissoc style/empty-chat-container :flex)
                       :justify-content :flex-end)
-    (if (or (nil? tribute) (#{:required :pending} (:status tribute)))
+    (cond (and (nil? tribute) (not (system-tags :contact/added))
+               (not (system-tags :tribute-to-talk/paid)))
+          [react/view {:style {:align-items :center :justify-content :flex-end}}
+           [photos/member-photo chat-id 120]
+           [react/view {:style {:flex-direction :row :justify-content :center}}
+            [react/text {:style style/loading-text}
+             (i18n/label :t/loading)]
+            [react/activity-indicator {:color colors/gray
+                                       :animating true}]]]
+
+          (and (pos? tribute) (not (system-tags :contact/added))
+               (not (system-tags :tribute-to-talk/paid)))
+          [react/view {:style {:align-items :center :justify-content :flex-end}}
+           [photos/member-photo chat-id 120]
+           [react/nested-text {:style (assoc style/empty-chat-text :margin-top 24)}
+            [{:style (assoc style/empty-chat-text :margin-top 24)}
+             (i18n/label :t/tribute-required-by-account {:account-name name})]
+            [{:style {:color colors/blue}
+              :on-press #(re-frame/dispatch [:navigate-to :tribute-learn-more])}
+             (str " " (i18n/label :learn-more))]]]
+
+          :else
+          [react/view [vector-icons/icon :tiny-icons/tiny-lock]
+           [react/nested-text {:style style/empty-chat-text}
+            [{:style style/empty-chat-container-one-to-one}
+             (i18n/label :t/empty-chat-description-one-to-one)]
+            [{:style style/empty-chat-text-name} name]]])
+    (if (and (pos? tribute) (not (system-tags :contact/added))
+             (not (system-tags :tribute-to-talk/paid)))
       [react/view {:style {:align-items :center :justify-content :flex-end}}
        [photos/member-photo chat-id 120]
        (if tribute
-         [react/text {:style (assoc style/empty-chat-text :margin-top 24)}
-          (i18n/label :t/tribute-required-by-account {:account-name name})
-          [react/text {:style {:color colors/blue}
-                       :on-press #(re-frame/dispatch [:navigate-to :tribute-learn-more])}
+         [react/nested-text {:style (assoc style/empty-chat-text :margin-top 24)}
+          [{:style (assoc style/empty-chat-text :margin-top 24)}
+           (i18n/label :t/tribute-required-by-account {:account-name name})]
+          [{:style {:color colors/blue}
+            :on-press #(re-frame/dispatch [:navigate-to :tribute-learn-more])}
            (str " " (i18n/label :learn-more))]]
          [react/view {:style {:flex-direction :row :justify-content :center}}
           [react/text {:style style/loading-text}
@@ -140,7 +169,7 @@
        [react/nested-text {:style style/empty-chat-text}
         [{:style style/empty-chat-container-one-to-one}
          (i18n/label :t/empty-chat-description-one-to-one)]
-        [react/text {:style style/empty-chat-text-name} name]]])]
+        [{:style style/empty-chat-text-name} name]]])]
    (when (and tribute (#{:required :pending} (:status tribute)))
      [react/view {:style {:align-items :flex-start
                           :margin-top 32
@@ -208,7 +237,7 @@
            messages-initialized?)
       (if group-chat
         [empty-chat-container]
-        [empty-chat-container-one-to-one chat-id name (:tribute contact) photo-path])
+        [empty-chat-container-one-to-one chat contact])
 
       :else
       [list/flat-list {:data                      messages
