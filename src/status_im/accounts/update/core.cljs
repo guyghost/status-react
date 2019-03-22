@@ -38,7 +38,7 @@
 
 (fx/defn contact-public-keys [{:keys [db]}]
   (reduce (fn [acc [_ {:keys [public-key] :as contact}]]
-            (if (contact.db/pending? contact)
+            (if (contact.db/active? contact)
               (conj acc public-key)
               acc))
           #{}

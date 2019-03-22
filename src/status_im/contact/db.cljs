@@ -18,10 +18,9 @@
 (spec/def :contact/last-updated (spec/nilable int?))
 (spec/def :contact/last-online (spec/nilable int?))
 
-;; contact/blocked: the user is blocked
-;; contact/request-received: the user has sent a contact request
-;; contact/added: the user was added to the contacts and a contact request was sent
 (spec/def :contact/tags (spec/coll-of string? :kind set?))
+;; contact/blocked: the user is blocked
+;; contact/added: the user was added to the contacts and a contact request was sent
 (spec/def :contact/system-tags (spec/coll-of keyword? :kind set?))
 
 (spec/def :contact/contact (spec/keys  :req-un [:contact/public-key
@@ -124,12 +123,11 @@
                  (assoc % :admin? true)
                  %)))))
 
-(defn pending?
+(defn added?
   ([{:keys [system-tags]}]
-   (and (contains? system-tags :contact/request-received)
-        (not (contains? system-tags :contact/added))))
+   (contains? system-tags :contact/added))
   ([db public-key]
-   (pending? (get-in db [:contacts/contacts public-key]))))
+   (added? (get-in db [:contacts/contacts public-key]))))
 
 (defn active?
   ([{:keys [system-tags]}]
@@ -148,7 +146,6 @@
   [{:keys [system-tags] :as contact}]
   (assoc contact
          :blocked? (blocked? contact)
-         :pending? (pending? contact)
          :active? (active? contact)
          :added? (contains? system-tags :contact/added)))
 

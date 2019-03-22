@@ -384,9 +384,5 @@
             pending? (aget old-contact "pending?")
             system-tags (cond-> #{}
                           blocked? (conj ":contact/blocked")
-                          pending? (conj ":contact/request-received")
-                          ;; we can't know if we received a contact-request
-                          ;; or not with the current booleans so we assume
-                          ;; we didn't
-                          (not pending?) (conj ":contact/added"))]
+                          (false? pending?) (conj ":contact/added"))]
         (aset new-contact "system-tags" (clj->js system-tags))))))

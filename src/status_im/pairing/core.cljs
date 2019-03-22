@@ -54,23 +54,15 @@
                                 :src     current-public-key
                                 :payload payload}}))
 
-(defn merge-system-tags
-  [new-contact old-contact]
-  (cond-> (or new-contact #{})
-    (contains? old-contact :contact/added)
-    (conj :contact/added)
-
-    (contains? old-contact :contact/request-received)
-    (conj :contact/request-received)))
-
 (defn merge-contact [local remote]
   (let [[old-contact new-contact] (sort-by :last-updated [remote local])]
     (-> local
         (merge new-contact)
         (assoc :device-info (device-info/merge-info (:last-updated new-contact)
                                                     (:device-info old-contact)
-                                                    (vals (:device-info new-contact))))
-        (update :system-tags merge-system-tags (:system-tags old-contact)))))
+                                                    (vals (:device-info new-contact)))
+               ;; we only take system tags from the newest contact version
+               :system-tags  (:system-tags new-contact)))))
 
 (def merge-contacts (partial merge-with merge-contact))
 
@@ -135,11 +127,9 @@
         (reduce (fn [acc {:keys [public-key system-tags] :as contact}]
                   (assoc acc
                          public-key
-                         (-> contact
-                             (dissoc :photo-path)
-                             ;; for compatibility before contact.v7
-                             (assoc :pending?
-                                    (contact.db/pending? contact)))))
+                         (cond-> (dissoc contact :photo-path)
+                           ;; for compatibility with version < contact.v7
+                           (contact.db/added? contact) (assoc :pending? false))))
                 {}
                 batch)]
     (transport.pairing/SyncInstallation. contacts-to-sync {} {})))

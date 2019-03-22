@@ -39,8 +39,7 @@
     (testing "it does not remove transport"
       (is (not (contact-code/stop-listening
                 {:db {:contacts/contacts
-                      {chat-id {:system-tags #{:contact/added
-                                               :contact/request-received}}}}}
+                      {chat-id {:system-tags #{:contact/added}}}}}
                 chat-id)))))
   (testing "the user is not in our contacts"
     (testing "the user is not in any group chats or 1-to1-"

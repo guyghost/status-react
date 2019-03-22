@@ -31,7 +31,7 @@
 (defn toolbar-chat-view
   [{:keys [chat-id chat-name contact color public-key public? group-chat]
     :as   current-chat}]
-  (let [{:keys [pending? public-key photo-path]} contact]
+  (let [{:keys [added? public-key photo-path]} contact]
     [react/view {:style styles/toolbar-chat-view}
      [react/view {:style {:flex-direction :row
                           :flex           1}}
@@ -41,10 +41,10 @@
           (string/capitalize (second chat-name))]]
         [react/image {:style  styles/chat-icon
                       :source {:uri photo-path}}])
-      [react/view {:style (styles/chat-title-and-type pending?)}
+      [react/view {:style (styles/chat-title-and-type added?)}
        [react/text {:style styles/chat-title}
         chat-name]
-       (cond pending?
+       (cond (not added?)
              [react/text {:style    styles/add-contact-text
                           :on-press #(re-frame/dispatch [:contact.ui/add-to-contact-pressed public-key])}
               (i18n/label :t/add-to-contacts)]

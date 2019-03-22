@@ -13,7 +13,7 @@
 
 (defn filter-selected-contacts
   [selected-contacts contacts]
-  (remove  #(contact.db/pending? (contacts %)) selected-contacts))
+  (filter  #(contact.db/added? (contacts %)) selected-contacts))
 
 (reg-sub
  :selected-contacts-count

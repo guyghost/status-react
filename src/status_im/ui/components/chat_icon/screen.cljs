@@ -34,8 +34,8 @@
 
 (defview pending-contact-badge
   [chat-id {:keys [pending-wrapper pending-outer-circle pending-inner-circle]}]
-  (letsubs [{:keys [pending?]} [:contacts/contact-by-address chat-id]]
-    (when pending?
+  (letsubs [{:keys [added?]} [:contacts/contact-by-address chat-id]]
+    (when-not added?
       [react/view pending-wrapper
        [react/view pending-outer-circle
         [react/view pending-inner-circle]]])))

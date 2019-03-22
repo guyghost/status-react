@@ -20,7 +20,7 @@
                                :last-online   0,
                                :public-key
                                "0x04985040682b77a32bb4bb58268a0719bd24ca4d07c255153fe1eb2ccd5883669627bd1a092d7cc76e8e4b9104327667b19dcda3ac469f572efabe588c38c1985f"
-                               :system-tags   #{:contact/request-received}}}
+                               :system-tags   #{}}}
             current-account  {:last-updated        0,
                               :address             "f23d28f538fd8cd4a90c2d96ca89f5bccca5383f",
                               :signed-up?          true,
@@ -49,4 +49,4 @@
                  :address          "eca8218b5ebeb2c47ba94c1b6e0a779d78fff7bc"
                  :last-online      0
                  :public-key       "0x04985040682b77a32bb4bb58268a0719bd24ca4d07c255153fe1eb2ccd5883669627bd1a092d7cc76e8e4b9104327667b19dcda3ac469f572efabe588c38c1985f"
-                 :system-tags      #{:contact/request-received}}]))))))
+                 :system-tags      #{}}]))))))

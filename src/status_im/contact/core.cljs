@@ -58,14 +58,14 @@
             {:db            (-> db
                                 (update-in [:contacts/contacts public-key] merge contact))
              :data-store/tx [(contacts-store/save-contact-tx contact)]}
-            #(when-not (contact.db/pending? contact)
+            #(when (contact.db/added? contact)
                (contact-code/listen-to-chat % public-key))))
 
 (fx/defn send-contact-request
   [{:keys [db] :as cofx} {:keys [public-key] :as contact}]
-  (if (contact.db/pending? contact)
-    (protocol/send (message.contact/map->ContactRequestConfirmed (own-info db)) public-key cofx)
-    (protocol/send (message.contact/map->ContactRequest (own-info db)) public-key cofx)))
+  (if (contact.db/added? contact)
+    (protocol/send (message.contact/map->ContactRequest (own-info db)) public-key cofx)
+    (protocol/send (message.contact/map->ContactRequestConfirmed (own-info db)) public-key cofx)))
 
 (fx/defn add-contact
   "Add a contact and set pending to false"
@@ -250,8 +250,7 @@
                                     (:device-info contact)
                                     device-info)
                      :last-updated timestamp-ms
-                     :system-tags  (conj (get contact :system-tags #{})
-                                         :contact/request-received)}
+                     :system-tags  (get contact :system-tags #{})}
               fcm-token (assoc :fcm-token fcm-token))]
         (upsert-contact cofx contact-props)))))
 

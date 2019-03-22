@@ -11,11 +11,10 @@
               {:system-tags #{:contact/added}}))))
   (testing "a user sent a contact request"
     (is (model/can-add-to-contacts?
-         {:system-tags #{:contact/request-received}}))
+         {:system-tags #{}}))
     (testing "and was added back"
       (is (not (model/can-add-to-contacts?
-                {:system-tags #{:contact/added
-                                :contact/request-received}})))))
+                {:system-tags #{:contact/added}})))))
   (testing "the user is not in the contacts"
     (testing "a normal user"
       (is (model/can-add-to-contacts?
@@ -36,12 +35,12 @@
           contact (get-in actual [:db :contacts/contacts public-key])]
       (testing "it stores the contact in the database"
         (is (:data-store/tx actual)))
-      (testing "it adds a new contact with :contact/request-received tag"
+      (testing "it adds a new contact"
         (is (=  {:public-key       public-key
                  :photo-path       "image"
                  :name             "name"
                  :last-updated     1000
-                 :system-tags      #{:contact/request-received}
+                 :system-tags      #{}
                  :device-info      {"1" {:id "1"
                                          :timestamp 1
                                          :fcm-token "token-1"}}
@@ -72,8 +71,7 @@
                                                           "2" {:id "2"
                                                                :timestamp 0
                                                                :fcm-token "token-2"}}
-                                       :system-tags      #{:contact/request-received
-                                                           :contact/added}
+                                       :system-tags      #{:contact/added}
                                        :fcm-token        "old-token"
                                        :address          "old-address"}}}})
             contact (get-in actual [:db :contacts/contacts public-key])]
@@ -93,8 +91,7 @@
                                       "3" {:id "3"
                                            :fcm-token "token-3"
                                            :timestamp 1}}
-                   :system-tags      #{:contact/request-received
-                                       :contact/added}
+                   :system-tags      #{:contact/added}
                    :fcm-token        "new-token"
                    :address          "new-address"}
                   contact)))))
@@ -111,8 +108,7 @@
                                        :photo-path       "old-image"
                                        :name             "old-name"
                                        :last-updated     1000
-                                       :system-tags      #{:contact/request-received
-                                                           :contact/added}
+                                       :system-tags      #{:contact/added}
                                        :fcm-token        "old-token"
                                        :address          "old-address"}}}})
             contact (get-in actual [:db :contacts/contacts public-key])]
@@ -131,8 +127,7 @@
                                        :photo-path       "old-image"
                                        :name             "old-name"
                                        :last-updated     1000
-                                       :system-tags      #{:contact/request-received
-                                                           :contact/added}
+                                       :system-tags      #{:contact/added}
                                        :fcm-token        "old-token"
                                        :address          "old-address"}}}})
             contact (get-in actual [:db :contacts/contacts public-key])]
@@ -151,8 +146,7 @@
                                                              :fcm-token "token-1"}}
                                      :name             "old-name"
                                      :last-updated     0
-                                     :system-tags      #{:contact/request-received
-                                                         :contact/added}}}}})
+                                     :system-tags      #{:contact/added}}}}})
           contact (get-in actual [:db :contacts/contacts public-key])]
       (testing "it stores the contact in the database"
         (is (:data-store/tx actual)))
@@ -163,8 +157,7 @@
                  :device-info      {"1" {:id "1"
                                          :fcm-token "token-1"}}
                  :last-updated     1000
-                 :system-tags      #{:contact/request-received
-                                     :contact/added}
+                 :system-tags      #{:contact/added}
                  :address          address} contact)))))
   (testing "the message is coming from us"
     (testing "it does not update contacts"
