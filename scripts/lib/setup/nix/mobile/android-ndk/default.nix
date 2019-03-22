@@ -14,7 +14,7 @@ let
     };
     linux = fetchzip {
       url = "https://dl.google.com/android/repository/android-ndk-${ndk-version}-linux-x86_64.zip";
-      sha256 = "1sgq9rmj4ffxrg5vimvl563dzxjxyxbyh715abppx1cq74r7clgl";
+      sha256 = "02q1hy423syl868jdyaxjm44hn59cmni5019r811vinagvq3m7qi";
     };
   };
 
