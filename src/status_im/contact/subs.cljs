@@ -9,6 +9,11 @@
    (:contacts/dapps db)))
 
 (re-frame/reg-sub
+ ::contacts
+ (fn [db]
+   (get db :contacts/contacts)))
+
+(re-frame/reg-sub
  ::query-current-chat-contacts
  :<- [:chats/current-chat]
  :<- [:contacts/contacts]
@@ -17,8 +22,9 @@
 
 (re-frame/reg-sub
  :contacts/contacts
- (fn [db]
-   (get db :contacts/contacts)))
+ :<- [::contacts]
+ (fn [contacts]
+   (contact.db/enrich-contacts contacts)))
 
 (re-frame/reg-sub
  :contacts/active
@@ -57,9 +63,10 @@
  :<- [:contacts/contacts]
  :<- [:contacts/current-contact-identity]
  (fn [[contacts identity]]
-   (-> (or (contacts identity)
-           (contact.db/public-key->new-contact identity))
-       contact.db/enrich-contact)))
+   (or (contacts identity)
+       (-> identity
+           contact.db/public-key->new-contact identity
+           contact.db/enrich-contact))))
 
 (re-frame/reg-sub
  :contacts/all-dapps
@@ -136,9 +143,7 @@
  :contacts/contact-by-address
  :<- [:contacts/contacts]
  (fn [contacts [_ address]]
-   (->> address
-        (contact.db/find-contact-by-address contacts)
-        (contact.db/enrich-contact))))
+   (contact.db/find-contact-by-address contacts address)))
 
 (re-frame/reg-sub
  :contacts/contacts-by-address

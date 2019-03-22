@@ -149,6 +149,13 @@
          :active? (active? contact)
          :added? (contains? system-tags :contact/added)))
 
+(defn enrich-contacts
+  [contacts]
+  (reduce (fn [acc [public-key contact]]
+            (assoc acc public-key (enrich-contact contact)))
+          {}
+          contacts))
+
 (defn get-blocked-contacts
   [contacts]
   (reduce (fn [acc {:keys [public-key] :as contact}]

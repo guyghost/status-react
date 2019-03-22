@@ -32,25 +32,24 @@
      [react/view online-dot-left]
      [react/view online-dot-right]]]])
 
-(defview pending-contact-badge
-  [chat-id {:keys [pending-wrapper pending-outer-circle pending-inner-circle]}]
-  (letsubs [{:keys [added?]} [:contacts/contact-by-address chat-id]]
-    (when-not added?
-      [react/view pending-wrapper
-       [react/view pending-outer-circle
-        [react/view pending-inner-circle]]])))
+(defn pending-contact-badge
+  [{:keys [pending-wrapper pending-outer-circle pending-inner-circle]}]
+  [react/view pending-wrapper
+   [react/view pending-outer-circle
+    [react/view pending-inner-circle]]])
 
 (defn chat-icon-view
-  [chat-id _group-chat name _online styles & [hide-dapp?]]
-  (let [photo-path (re-frame.core/subscribe [:contacts/chat-photo chat-id])]
-    [react/view (:container styles)
-     (if-not (string/blank? @photo-path)
-       [photos/photo @photo-path styles]
-       [default-chat-icon name styles])
-     [pending-contact-badge chat-id styles]]))
+  [{:keys [photo-path added?]} _group-chat name _online styles & [hide-dapp?]]
+  [react/view (:container styles)
+   (if-not (string/blank? photo-path)
+     [photos/photo photo-path styles]
+     [default-chat-icon name styles])
+   (when-not added?
+     [pending-contact-badge styles])])
 
-(defn chat-icon-view-toolbar [chat-id group-chat name color online]
-  [chat-icon-view chat-id group-chat name online
+(defn chat-icon-view-toolbar
+  [contact group-chat name color online]
+  [chat-icon-view contact group-chat name online
    {:container              styles/container-chat-toolbar
     :online-view-wrapper    styles/online-view-wrapper
     :online-view            styles/online-view
@@ -64,8 +63,9 @@
     :default-chat-icon      (styles/default-chat-icon-chat-toolbar color)
     :default-chat-icon-text styles/default-chat-icon-text}])
 
-(defn chat-icon-view-chat-list [chat-id group-chat name color online & [hide-dapp?]]
-  [chat-icon-view chat-id group-chat name online
+(defn chat-icon-view-chat-list
+  [contact group-chat name color online & [hide-dapp?]]
+  [chat-icon-view contact group-chat name online
    {:container              styles/container-chat-list
     :online-view-wrapper    styles/online-view-wrapper
     :online-view            styles/online-view
@@ -80,14 +80,14 @@
     :default-chat-icon-text styles/default-chat-icon-text}
    hide-dapp?])
 
-(defn contact-icon-view [{:keys [photo-path name dapp?]} {:keys [container] :as styles}]
-  (let [photo-path photo-path]
-    [react/view container
-     (if-not (string/blank? photo-path)
-       [photos/photo photo-path styles]
-       [default-chat-icon name styles])
-     (when dapp?
-       [dapp-badge styles])]))
+(defn contact-icon-view
+  [{:keys [photo-path name dapp?]} {:keys [container] :as styles}]
+  [react/view container
+   (if-not (string/blank? photo-path)
+     [photos/photo photo-path styles]
+     [default-chat-icon name styles])
+   (when dapp?
+     [dapp-badge styles])])
 
 (defn contact-icon-contacts-tab [contact]
   [contact-icon-view contact
